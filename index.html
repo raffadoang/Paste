@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lacak Lokasi Target - Realtime</title>
+    <style>
+        body { font-family: monospace; background: #000; color: #0f0; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; text-align: center; }
+        h1 { font-size: 1.5em; margin-bottom: 20px; }
+        #status { font-size: 1.2em; margin: 10px 0; color: #fff; }
+        #coords { font-size: 1.5em; font-weight: bold; color: #ff0; margin: 20px 0; }
+        #mapLink { display: block; margin-top: 20px; color: #00f; text-decoration: underline; }
+        button { padding: 15px 30px; background: #333; color: #0f0; border: 2px solid #0f0; font-size: 1.2em; cursor: pointer; margin-top: 20px; }
+        button:hover { background: #0f0; color: #000; }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+    <h1>Lacak Lokasi Target</h1>
+    <div id="status">Tekan tombol untuk mengaktifkan pelacakan GPS...</div>
+    <div id="coords">Menunggu sinyal...</div>
+    <a id="mapLink" href="#" target="_blank"></a>
+    
+    <button onclick="mulaiLacak()" class="hidden">MULAI LACAK</button>
+
+    <script>
+        // Tampilkan tombol jika tidak otomatis
+        document.querySelector('button').classList.remove('hidden');
+
+        function mulaiLacak() {
+            const statusDiv = document.getElementById('status');
+            const coordsDiv = document.getElementById('coords');
+            const mapLink = document.getElementById('mapLink');
+
+            if (!navigator.geolocation) {
+                statusDiv.innerText = "Browser Anda tidak mendukung Geolokasi.";
+                return;
+            }
+
+            statusDiv.innerText = "Mengambil koordinat GPS dari perangkat...";
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const akurasi = position.coords.accuracy;
+
+                    statusDiv.innerText = `SUCCESS: Lokasi Ditemukan!`;
+                    coordsDiv.innerHTML = `Lat: ${lat}<br>Lng: ${lng}<br>Akurasi: ${akurasi}m`;
+                    
+                    const mapUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+                    mapLink.href = mapUrl;
+                    mapLink.innerText = `LIHAT DI GOOGLE MAPS KLIK DISINI`;
+                    mapLink.style.display = 'block';
+                },
+                (error) => {
+                    let pesan = "";
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            pesan = "Target menolak izin lokasi. Wajib diizinkan untuk hasil nyata.";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            pesan = "Informasi lokasi tidak tersedia.";
+                            break;
+                        case error.TIMEOUT:
+                            pesan = "Waktu habis. Coba lagi.";
+                            break;
+                        default:
+                            pesan = "Terjadi kesalahan tidak diketahui.";
+                    }
+                    statusDiv.innerText = "GAGAL";
+                    coordsDiv.innerText = pesan;
+                },
+                {
+                    enableHighAccuracy: true, // Wajib aktif untuk akurasi tinggi
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+        }
+    </script>
+</body>
+</html>
